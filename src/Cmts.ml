@@ -73,6 +73,21 @@ end = struct
              |> Option.some
            else None))
 
+  let rec find_in_previous elt t = function
+    | [] -> parents t.map t.roots elt ~ancestors:[]
+    | p :: ancestors ->
+        if Itv.contains p elt then parents t.map [p] elt ~ancestors
+        else find_in_previous elt t ancestors
+
+  let sort_itv_list = List.sort ~compare:Itv.compare_width_decreasing
+
+  let sort {roots; map} =
+    {roots= sort_itv_list roots; map= Map.map map ~f:sort_itv_list}
+
+  let add_to_map t ~key ~data = {t with map= Map.add_multi t.map ~key ~data}
+
+  let add_root t elt = {t with roots= elt :: t.roots}
+
   (* Add elements in decreasing width order to construct tree from roots to
      leaves. That is, when adding an interval to a partially constructed
      tree, it will already contain all wider intervals, so the new interval's
@@ -82,29 +97,19 @@ end = struct
     let elts_decreasing_width =
       List.dedup_and_sort ~compare:Itv.compare_width_decreasing elts
     in
-    let rec find_in_previous elt ~tree_roots ~tree_map = function
-      | [] -> parents tree_map tree_roots elt ~ancestors:[]
-      | p :: ancestors ->
-          if Itv.contains p elt then parents tree_map [p] elt ~ancestors
-          else find_in_previous elt ancestors ~tree_roots ~tree_map
-    in
-    let (_ : Itv.t list), tree_roots, tree_map =
+    let (_ : Itv.t list), t =
       List.fold elts_decreasing_width
-        ~init:([], [], Map.empty (module ItvCompare))
-        ~f:(fun (prev_ancestor, tree_roots, tree_map) elt ->
-          let ancestors =
-            find_in_previous elt prev_ancestor ~tree_roots ~tree_map
-          in
-          let new_tree_roots, new_tree_map =
+        ~init:([], {roots= []; map= Map.empty (module ItvCompare)})
+        ~f:(fun (prev_ancestor, t) elt ->
+          let ancestors = find_in_previous elt t prev_ancestor in
+          let new_t =
             match ancestors with
-            | parent :: _ ->
-                (tree_roots, Map.add_multi tree_map ~key:parent ~data:elt)
-            | [] -> (elt :: tree_roots, tree_map)
+            | parent :: _ -> add_to_map t ~key:parent ~data:elt
+            | [] -> add_root t elt
           in
-          (ancestors, new_tree_roots, new_tree_map))
+          (ancestors, new_t))
     in
-    let sort_itv_list = List.sort ~compare:Itv.compare_width_decreasing in
-    {roots= sort_itv_list tree_roots; map= Map.map tree_map ~f:sort_itv_list}
+    sort t
 
   let children {map; _} elt = Option.value ~default:[] (Map.find map elt)
 
