@@ -82,28 +82,29 @@ end = struct
     let elts_decreasing_width =
       List.dedup_and_sort ~compare:Itv.compare_width_decreasing elts
     in
-    let tree_map = ref (Map.empty (module ItvCompare)) in
-    let rec find_in_previous elt ~tree_roots = function
-      | [] -> parents !tree_map tree_roots elt ~ancestors:[]
+    let rec find_in_previous elt ~tree_roots ~tree_map = function
+      | [] -> parents tree_map tree_roots elt ~ancestors:[]
       | p :: ancestors ->
-          if Itv.contains p elt then parents !tree_map [p] elt ~ancestors
-          else find_in_previous elt ancestors ~tree_roots
+          if Itv.contains p elt then parents tree_map [p] elt ~ancestors
+          else find_in_previous elt ancestors ~tree_roots ~tree_map
     in
-    let (_ : Itv.t list), tree_roots =
-      List.fold elts_decreasing_width ~init:([], [])
-        ~f:(fun (prev_ancestor, tree_roots) elt ->
-          let ancestors = find_in_previous elt prev_ancestor ~tree_roots in
-          let new_tree_roots =
+    let (_ : Itv.t list), tree_roots, tree_map =
+      List.fold elts_decreasing_width
+        ~init:([], [], Map.empty (module ItvCompare))
+        ~f:(fun (prev_ancestor, tree_roots, tree_map) elt ->
+          let ancestors =
+            find_in_previous elt prev_ancestor ~tree_roots ~tree_map
+          in
+          let new_tree_roots, new_tree_map =
             match ancestors with
             | parent :: _ ->
-                tree_map := Map.add_multi !tree_map ~key:parent ~data:elt ;
-                tree_roots
-            | [] -> elt :: tree_roots
+                (tree_roots, Map.add_multi tree_map ~key:parent ~data:elt)
+            | [] -> (elt :: tree_roots, tree_map)
           in
-          (ancestors, new_tree_roots))
+          (ancestors, new_tree_roots, new_tree_map))
     in
     let sort_itv_list = List.sort ~compare:Itv.compare_width_decreasing in
-    {roots= sort_itv_list tree_roots; map= Map.map !tree_map ~f:sort_itv_list}
+    {roots= sort_itv_list tree_roots; map= Map.map tree_map ~f:sort_itv_list}
 
   let children {map; _} elt = Option.value ~default:[] (Map.find map elt)
 
