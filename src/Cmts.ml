@@ -75,22 +75,27 @@ end = struct
       List.dedup_and_sort ~compare:Itv.compare_width_decreasing elts
     in
     let tree_tbl = Hashtbl.create (module Itv) in
-    let tree_roots = ref [] in
-    let rec find_in_previous elt = function
-      | [] -> parents tree_tbl !tree_roots elt ~ancestors:[]
+    let rec find_in_previous elt ~tree_roots = function
+      | [] -> parents tree_tbl tree_roots elt ~ancestors:[]
       | p :: ancestors ->
           if Itv.contains p elt then parents tree_tbl [p] elt ~ancestors
-          else find_in_previous elt ancestors
+          else find_in_previous elt ancestors ~tree_roots
     in
-    List.fold elts_decreasing_width ~init:[] ~f:(fun prev_ancestor elt ->
-        let ancestors = find_in_previous elt prev_ancestor in
-        ( match ancestors with
-        | parent :: _ -> Hashtbl.add_multi tree_tbl ~key:parent ~data:elt
-        | [] -> tree_roots := elt :: !tree_roots ) ;
-        ancestors)
-    |> (ignore : Itv.t list -> unit) ;
+    let (_ : Itv.t list), tree_roots =
+      List.fold elts_decreasing_width ~init:([], [])
+        ~f:(fun (prev_ancestor, tree_roots) elt ->
+          let ancestors = find_in_previous elt prev_ancestor ~tree_roots in
+          let new_tree_roots =
+            match ancestors with
+            | parent :: _ ->
+                Hashtbl.add_multi tree_tbl ~key:parent ~data:elt ;
+                tree_roots
+            | [] -> elt :: tree_roots
+          in
+          (ancestors, new_tree_roots))
+    in
     let sort_itv_list = List.sort ~compare:Itv.compare_width_decreasing in
-    { roots= sort_itv_list !tree_roots
+    { roots= sort_itv_list tree_roots
     ; tbl= Hashtbl.map tree_tbl ~f:sort_itv_list }
 
   let children {tbl; _} elt = Option.value ~default:[] (Hashtbl.find tbl elt)
