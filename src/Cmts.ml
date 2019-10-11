@@ -48,20 +48,28 @@ end) : sig
 end = struct
   (* simple but (asymptotically) suboptimal implementation *)
 
-  type t = {roots: Itv.t list; tbl: (Itv.t, Itv.t list) Hashtbl.t}
+  module ItvCompare = struct
+    type t = Itv.t
+
+    include Comparator.Make (Itv)
+  end
+
+  type t =
+    { roots: Itv.t list
+    ; map: (Itv.t, Itv.t list, ItvCompare.comparator_witness) Map.t }
 
   let roots t = t.roots
 
   (* Descend tree from roots, find deepest node that contains elt. *)
 
-  let rec parents tbl roots ~ancestors elt =
+  let rec parents map roots ~ancestors elt =
     Option.value ~default:ancestors
       (List.find_map roots ~f:(fun root ->
            if Itv.contains root elt then
-             Hashtbl.find_and_call tbl root
-               ~if_found:(fun children ->
-                 parents tbl children ~ancestors:(root :: ancestors) elt)
-               ~if_not_found:(fun x -> x :: ancestors)
+             ( match Map.find map root with
+             | Some children ->
+                 parents map children ~ancestors:(root :: ancestors) elt
+             | None -> root :: ancestors )
              |> Option.some
            else None))
 
@@ -74,11 +82,11 @@ end = struct
     let elts_decreasing_width =
       List.dedup_and_sort ~compare:Itv.compare_width_decreasing elts
     in
-    let tree_tbl = Hashtbl.create (module Itv) in
+    let tree_map = ref (Map.empty (module ItvCompare)) in
     let rec find_in_previous elt ~tree_roots = function
-      | [] -> parents tree_tbl tree_roots elt ~ancestors:[]
+      | [] -> parents !tree_map tree_roots elt ~ancestors:[]
       | p :: ancestors ->
-          if Itv.contains p elt then parents tree_tbl [p] elt ~ancestors
+          if Itv.contains p elt then parents !tree_map [p] elt ~ancestors
           else find_in_previous elt ancestors ~tree_roots
     in
     let (_ : Itv.t list), tree_roots =
@@ -88,17 +96,16 @@ end = struct
           let new_tree_roots =
             match ancestors with
             | parent :: _ ->
-                Hashtbl.add_multi tree_tbl ~key:parent ~data:elt ;
+                tree_map := Map.add_multi !tree_map ~key:parent ~data:elt ;
                 tree_roots
             | [] -> elt :: tree_roots
           in
           (ancestors, new_tree_roots))
     in
     let sort_itv_list = List.sort ~compare:Itv.compare_width_decreasing in
-    { roots= sort_itv_list tree_roots
-    ; tbl= Hashtbl.map tree_tbl ~f:sort_itv_list }
+    {roots= sort_itv_list tree_roots; map= Map.map !tree_map ~f:sort_itv_list}
 
-  let children {tbl; _} elt = Option.value ~default:[] (Hashtbl.find tbl elt)
+  let children {map; _} elt = Option.value ~default:[] (Map.find map elt)
 
   let dump tree =
     let open Fmt in
