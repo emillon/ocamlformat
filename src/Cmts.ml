@@ -48,11 +48,9 @@ end) : sig
 end = struct
   (* simple but (asymptotically) suboptimal implementation *)
 
-  type t = {mutable roots: Itv.t list; tbl: (Itv.t, Itv.t list) Hashtbl.t}
+  type t = {roots: Itv.t list; tbl: (Itv.t, Itv.t list) Hashtbl.t}
 
   let roots t = t.roots
-
-  let create () = {roots= []; tbl= Hashtbl.create (module Itv)}
 
   (* Descend tree from roots, find deepest node that contains elt. *)
 
@@ -76,23 +74,24 @@ end = struct
     let elts_decreasing_width =
       List.dedup_and_sort ~compare:Itv.compare_width_decreasing elts
     in
-    let tree = create () in
+    let tree_tbl = Hashtbl.create (module Itv) in
+    let tree_roots = ref [] in
     let rec find_in_previous elt = function
-      | [] -> parents tree.tbl tree.roots elt ~ancestors:[]
-      | p :: ancestors when Itv.contains p elt ->
-          parents tree.tbl [p] elt ~ancestors
-      | _ :: px -> find_in_previous elt px
+      | [] -> parents tree_tbl !tree_roots elt ~ancestors:[]
+      | p :: ancestors ->
+          if Itv.contains p elt then parents tree_tbl [p] elt ~ancestors
+          else find_in_previous elt ancestors
     in
     List.fold elts_decreasing_width ~init:[] ~f:(fun prev_ancestor elt ->
         let ancestors = find_in_previous elt prev_ancestor in
         ( match ancestors with
-        | parent :: _ -> Hashtbl.add_multi tree.tbl ~key:parent ~data:elt
-        | [] -> tree.roots <- elt :: tree.roots ) ;
+        | parent :: _ -> Hashtbl.add_multi tree_tbl ~key:parent ~data:elt
+        | [] -> tree_roots := elt :: !tree_roots ) ;
         ancestors)
     |> (ignore : Itv.t list -> unit) ;
     let sort_itv_list = List.sort ~compare:Itv.compare_width_decreasing in
-    { roots= sort_itv_list tree.roots
-    ; tbl= Hashtbl.map tree.tbl ~f:sort_itv_list }
+    { roots= sort_itv_list !tree_roots
+    ; tbl= Hashtbl.map tree_tbl ~f:sort_itv_list }
 
   let children {tbl; _} elt = Option.value ~default:[] (Hashtbl.find tbl elt)
 
