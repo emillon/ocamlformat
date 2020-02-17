@@ -33,6 +33,10 @@ type 'a t =
 
 type error
 
+val should_crash : error -> bool
+
+val error_to_string : error -> string
+
 val format :
      'a t
   -> ?output_file:string
@@ -67,3 +71,5 @@ val print_error :
   -> unit
 (** [print_error conf ?fmt ~input_name e] prints the error message
     corresponding to error [e] on the [fmt] formatter (stderr by default). *)
+
+

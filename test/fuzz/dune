@@ -1,0 +1,5 @@
+; XXX attach to fuzz?
+
+(test
+ (name fuzz)
+ (libraries ocamlformat_lib fuzz_omp crowbar))

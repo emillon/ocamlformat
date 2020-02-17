@@ -52,6 +52,18 @@ type error =
   | Ocamlformat_bug of {exn: exn}
   | User_error of string
 
+let error_to_string = function
+  | Invalid_source _ -> "Invalid_source"
+  | User_error s -> "User error: "  ^ s
+  | Unstable _ -> "Unstable"
+  | Ocamlformat_bug _ -> "Ocamlformat_bug"
+
+let should_crash = function
+  | Invalid_source _ -> false
+  | User_error _ -> true
+  | Unstable _ -> true
+  | Ocamlformat_bug _ -> true
+
 let ellipsis n msg =
   let msg = String.strip msg in
   if n > 0 && String.length msg > (n * 2) + 10 then
