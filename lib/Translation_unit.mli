@@ -9,6 +9,7 @@
  *                                                                    *
  **********************************************************************)
 
+open Migrate_ast
 open Parse_with_comments
 
 type 'a t =
@@ -68,4 +69,8 @@ val print_error :
 (** [print_error conf ?fmt ~input_name e] prints the error message
     corresponding to error [e] on the [fmt] formatter (stderr by default). *)
 
+val impl : Parsetree.toplevel_phrase list t
+(** Operations on implementation files. *)
 
+val intf : Parsetree.signature t
+(** Operations on interface files. *)
