@@ -7,7 +7,7 @@ type outcome = No_error | Parse_error | Format_error
 let parse_and_format xunit ?output_file ~input_name ~source conf opts =
   Location.input_name := input_name ;
   match
-    Parse_with_comments.parse xunit.Translation_unit.parse conf ~source
+    Parse_with_comments.parse (Translation_unit.parse xunit) conf ~source
   with
   | exception _exn -> Parse_error
   | parsed -> (
@@ -25,9 +25,10 @@ let check_structure structure =
   let opts =
     {Conf.debug= false; margin_check= false; format_invalid_files= false}
   in
+  let xunit = Translation_unit.impl in
   let result =
-    parse_and_format Translation_unit.impl ?output_file:None
-      ~input_name:"input.ml" ~source Conf.conventional_profile opts
+    parse_and_format xunit ?output_file:None ~input_name:"input.ml" ~source
+      Conf.conventional_profile opts
   in
   match result with
   | No_error | Parse_error -> ()

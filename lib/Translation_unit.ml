@@ -429,3 +429,5 @@ let parse_and_format xunit ?output_file ~input_name ~source conf opts =
   parse_result xunit conf opts ~source ~input_name
   >>= fun parsed ->
   format xunit ?output_file ~input_name ~source ~parsed conf opts
+
+let parse t lb = t.parse lb

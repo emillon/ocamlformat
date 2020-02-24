@@ -12,24 +12,7 @@
 open Migrate_ast
 open Parse_with_comments
 
-type 'a t =
-  { init_cmts: debug:bool -> Source.t -> 'a -> Cmt.t list -> Cmts.t
-  ; fmt: debug:bool -> Source.t -> Cmts.t -> Conf.t -> 'a -> Fmt.t
-  ; parse: Lexing.lexbuf -> 'a
-  ; recover: string -> string
-  ; equal:
-         ignore_doc_comments:bool
-      -> Conf.t
-      -> 'a with_comments
-      -> 'a with_comments
-      -> bool
-  ; moved_docstrings:
-         Conf.t
-      -> 'a with_comments
-      -> 'a with_comments
-      -> Normalize.docstring_error list
-  ; normalize: Conf.t -> 'a with_comments -> 'a
-  ; printast: Caml.Format.formatter -> 'a -> unit }
+type 'a t
 (** Operations on translation units. *)
 
 type error
@@ -74,3 +57,5 @@ val impl : Parsetree.toplevel_phrase list t
 
 val intf : Parsetree.signature t
 (** Operations on interface files. *)
+
+val parse : 'a t -> Lexing.lexbuf -> 'a
