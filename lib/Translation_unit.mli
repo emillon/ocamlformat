@@ -33,10 +33,6 @@ type 'a t =
 
 type error
 
-val should_crash : error -> bool
-
-val error_to_string : error -> string
-
 val format :
      'a t
   -> ?output_file:string
