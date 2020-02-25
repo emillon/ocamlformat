@@ -36,6 +36,8 @@ let check_structure structure =
       print_endline "=======" ;
       print_endline source ;
       print_endline "=======" ;
+      Format.printf "%a\n" (Printast.structure 2) structure ;
+      print_endline "=======" ;
       Crowbar.fail "error"
 
 let () =
