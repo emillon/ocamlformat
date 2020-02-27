@@ -115,7 +115,12 @@ module Parsetree_crowbar = struct
 
   and payload = [%import: Parsetree.payload]
 
-  and constant = [%import: Parsetree.constant]
+  and constant = Parsetree.constant =
+    | Pconst_integer of
+        (string[@generator Crowbar.(map [int] string_of_int)]) * char option
+    | Pconst_char of char
+    | Pconst_string of string * string option
+    | Pconst_float of string * char option
 
   and case = [%import: Parsetree.case]
 
