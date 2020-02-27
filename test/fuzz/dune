@@ -1,5 +1,12 @@
-; XXX attach to fuzz?
-
-(test
+(executable
  (name fuzz)
  (libraries ocamlformat_lib fuzz_omp crowbar))
+
+(alias
+ (name runtest)
+ (deps fuzz.exe))
+
+(alias
+ (name fuzz)
+ (action
+  (run ./fuzz.exe)))
