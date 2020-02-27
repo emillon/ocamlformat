@@ -5,6 +5,27 @@ let to_current = Migrate_parsetree.Versions.(migrate ocaml_409 ocaml_current)
 
 [@@@ocaml.warning "-39"]
 
+type int_constant = string
+
+let int_constant_to_crowbar = Crowbar.(map [int] string_of_int)
+
+type float_constant = string
+
+let float_constant_to_crowbar = Crowbar.(map [float] string_of_float)
+
+type constant_suffix = char
+
+let constant_suffix_to_crowbar =
+  let open Base in
+  let chars = "ghijklmnopqrstuvwxyz" in
+  chars ^ String.uppercase chars
+  |> String.to_list |> List.map ~f:Crowbar.const |> Crowbar.choose
+
+type string_a = string
+
+let string_a_to_crowbar =
+  Crowbar.(map [range 64]) (fun len -> String.make len 'a')
+
 module Longident = struct
   type t = [%import: Longident.t] [@@deriving crowbar]
 end
@@ -89,7 +110,7 @@ module Parsetree_crowbar = struct
 
   and include_declaration = [%import: Parsetree.include_declaration]
 
-  and attribute = [%import: Parsetree.attribute]
+  and attribute = [%import: (Parsetree.attribute[@with string := string_a])]
 
   and extension = [%import: Parsetree.extension]
 
@@ -116,11 +137,10 @@ module Parsetree_crowbar = struct
   and payload = [%import: Parsetree.payload]
 
   and constant = Parsetree.constant =
-    | Pconst_integer of
-        (string[@generator Crowbar.(map [int] string_of_int)]) * char option
+    | Pconst_integer of int_constant * constant_suffix option
     | Pconst_char of char
     | Pconst_string of string * string option
-    | Pconst_float of string * char option
+    | Pconst_float of float_constant * constant_suffix option
 
   and case = [%import: Parsetree.case]
 

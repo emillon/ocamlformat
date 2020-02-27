@@ -2,4 +2,4 @@
  (name fuzz_omp)
  (preprocess
   (staged_pps ppx_import ppx_deriving_crowbar))
- (libraries ocaml-migrate-parsetree crowbar))
+ (libraries ocaml-migrate-parsetree crowbar base))
