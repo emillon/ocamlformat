@@ -5,15 +5,14 @@ let to_current = Migrate_parsetree.Versions.(migrate ocaml_409 ocaml_current)
 
 [@@@ocaml.warning "-39"]
 
-type position = [%import: Lexing.position] [@@deriving crowbar]
-
 module Longident = struct
   type t = [%import: Longident.t] [@@deriving crowbar]
 end
 
 module Location = struct
-  type t = [%import: (Location.t[@with Stdlib.Lexing.position := position])]
-  [@@deriving crowbar]
+  type t = Location.t
+
+  let to_crowbar = Crowbar.const Location.none
 
   type 'a loc = [%import: 'a Location.loc] [@@deriving crowbar]
 end
