@@ -1,17 +1,4 @@
 (rule
- (targets check_formatted.output)
- (deps .ocamlformat)
- (action
-  (with-outputs-to
-   %{targets}
-   (run %{bin:ocamlformat} --root=. --check %{dep:sample/a.ml}))))
-
-(rule
- (alias runtest)
- (action
-  (diff check_formatted.expected check_formatted.output)))
-
-(rule
  (targets check_not_formatted.output)
  (deps .ocamlformat)
  (action
