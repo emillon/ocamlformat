@@ -19,6 +19,18 @@ open Ast_passes.Ast_final
 open Ast
 open Fmt
 
+module Break_cache_key = struct
+    type t = arg_label * expression
+
+    let sexp_of_t _ = assert false
+
+    let compare = Poly.compare
+
+    let hash = Hashtbl.hash
+  end
+
+let break_cache = Hashtbl.create (module Break_cache_key)
+
 type c =
   { conf: Conf.t
   ; debug: bool
@@ -1391,14 +1403,24 @@ and fmt_args_grouped ?epi:(global_epi = noop) c ctx args =
   in
   let is_simple (lbl, x) =
     let xexp = sub_exp ~ctx x in
-    let output =
-      Cmts.preserve
-        (fun cmts ->
-          let cmts = Cmts.drop_before cmts x.pexp_loc in
-          fmt_arg ~first:false ~last:false {c with cmts} (lbl, x) )
-        c.cmts
+    let get_breaks (lbl, x) =
+        let output =
+          Cmts.preserve
+            (fun cmts ->
+              let cmts = Cmts.drop_before cmts x.pexp_loc in
+              fmt_arg ~first:false ~last:false {c with cmts} (lbl, x) )
+            c.cmts
+        in
+        String.(rstrip output |> is_substring ~substring:"\n   ")
     in
-    let breaks = String.(rstrip output |> is_substring ~substring:"\n   ") in
+    let breaks =
+      match Hashtbl.find break_cache (lbl, x) with
+      | Some hit -> hit
+      | None ->
+          let r = get_breaks (lbl, x) in
+          Hashtbl.set break_cache ~key:(lbl, x) ~data:r;
+          r
+    in
     is_simple c.conf (expression_width c) xexp && not breaks
   in
   let break x y = not (is_simple x && is_simple y) in
