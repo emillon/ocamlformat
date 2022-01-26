@@ -37,7 +37,7 @@
   (ocaml
    (and
     (>= 4.08)
-    (< 4.13)))
+    (< 4.14)))
   ocaml-version
   (alcotest :with-test)
   (base
