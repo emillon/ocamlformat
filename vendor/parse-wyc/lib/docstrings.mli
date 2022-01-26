@@ -13,7 +13,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open Migrate_parsetree.Ast_408
+open Ppxlib_ast__Versions.OCaml_408.Ast
 (** Documentation comments
 
   {b Warning:} this module is unstable and part of

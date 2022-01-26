@@ -1,19 +1,19 @@
-module Selected_version = Migrate_parsetree.Ast_408
-module Parsetree = Selected_version.Parsetree
-module Asttypes = Selected_version.Asttypes
+module Selected_version = Ppxlib_ast__Versions.OCaml_408
+module Parsetree = Selected_version.Ast.Parsetree
+module Asttypes = Selected_version.Ast.Asttypes
 
 module Mapper = struct
   type ('omp, 'ppxlib) fragment =
     | Structure
-        : ( Selected_version.Parsetree.structure,
+        : ( Selected_version.Ast.Parsetree.structure,
             Ppxlib.Parsetree.structure )
           fragment
     | Signature
-        : ( Selected_version.Parsetree.signature,
+        : ( Selected_version.Ast.Parsetree.signature,
             Ppxlib.Parsetree.signature )
           fragment
     | Use_file
-        : ( Selected_version.Parsetree.toplevel_phrase list,
+        : ( Selected_version.Ast.Parsetree.toplevel_phrase list,
             Ppxlib.Parsetree.toplevel_phrase list )
           fragment
 

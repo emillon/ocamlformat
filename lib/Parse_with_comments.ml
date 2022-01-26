@@ -56,7 +56,7 @@ let parse fragment (conf : Conf.t) ~source =
     W.enable 50
     :: (if conf.quiet then List.map ~f:W.disable W.in_lexer else [])
   in
-  Warnings.parse_options false (W.to_string warnings) ;
+  let (_:Warnings.alert option) = Warnings.parse_options false (W.to_string warnings) in
   let w50 = ref [] in
   let t =
     let lexbuf, hash_bang = fresh_lexbuf source in

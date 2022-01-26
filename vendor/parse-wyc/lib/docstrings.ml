@@ -13,7 +13,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open Migrate_parsetree.Ast_408
+open Ppxlib_ast__Versions.OCaml_408.Ast
 [@@@ocaml.warning "-9"]
 open Location
 

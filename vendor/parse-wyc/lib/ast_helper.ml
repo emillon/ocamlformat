@@ -16,7 +16,7 @@
 (** Helpers to produce Parsetree fragments *)
 
 open Docstrings
-open Migrate_parsetree.Ast_408
+open Ppxlib_ast__Versions.OCaml_408.Ast
 [@@@ocaml.warning "-9"]
 module Int = struct
   let to_string = string_of_int

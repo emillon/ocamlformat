@@ -17,7 +17,7 @@
 
 %{
 
-open Migrate_parsetree.Ast_408
+open Ppxlib_ast__Versions.OCaml_408.Ast
 open Asttypes
 open Longident
 open Parsetree
