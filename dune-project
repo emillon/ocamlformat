@@ -38,7 +38,8 @@
    (and
     (>= 4.08)
     (< 4.14)))
-  ocaml-version
+  (ocaml-version
+   (>= 3.1.0))
   (alcotest :with-test)
   (base
    (and
@@ -58,13 +59,16 @@
   (ocp-indent :with-test)
   (bisect_ppx
    (and
-    :with-test
+    :dev
     (>= 2.5.0)))
   (odoc
-   (>= 1.4.2))
+   (and
+    (>= 1.4.2)
+    (< 2.0.0)))
   (ppxlib
    (>= 0.22.0))
-  re
+  (re
+   (> 1.7.2))
   (stdio
    (< v0.15))
   (uuseg
